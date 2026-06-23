@@ -88,7 +88,7 @@ export function Navigation({ visible }: { visible: boolean }) {
                 </NavAnchor>
               ))}
             </nav>
-            <NavAnchor href="/#connect" className="site-header-cta font-mono">
+            <NavAnchor href="/#contact" className="site-header-cta font-mono">
               Connect
             </NavAnchor>
           </div>

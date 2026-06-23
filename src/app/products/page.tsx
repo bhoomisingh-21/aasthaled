@@ -1,5 +1,5 @@
-import Link from "next/link";
 import Image from "next/image";
+import Link from "next/link";
 import { PageShell } from "@/components/layout/PageShell";
 import { BackLink } from "@/components/layout/BackLink";
 import { PRODUCTS } from "@/lib/constants";
@@ -12,29 +12,41 @@ export const metadata = {
 export default function ProductsPage() {
   return (
     <PageShell>
-      <section className="products-page section-pad section--light">
-        <header className="products-page-head">
-          <p className="eyebrow font-body">Products</p>
-          <h1 className="products-page-title font-display">Our luminaires</h1>
-          <p className="section-lead font-body">
-            Specification-grade decorative and architectural lighting, engineered in-house.
-          </p>
-          <BackLink href="/#products">Back to experience</BackLink>
-        </header>
+      <section className="products-page">
+        <div className="products-page-inner">
+          <div className="products-page-topbar">
+            <BackLink href="/#products" />
+            <p className="products-page-count font-mono">{PRODUCTS.length} designs</p>
+          </div>
 
-        <div className="products-page-grid">
-          {PRODUCTS.map((product, i) => (
-            <Link key={product.id} href={`/products/${product.id}`} className="product-card">
-              <div className="product-card-img">
-                <Image src={product.image} alt={product.name} fill className="object-cover" sizes="400px" />
-              </div>
-              <div className="product-card-meta font-body">
-                <span className="object-index">0{i + 1}</span>
-                <h2 className="font-display">{product.name}</h2>
-                <p>{product.type}</p>
-              </div>
-            </Link>
-          ))}
+          <header className="products-page-head">
+            <p className="eyebrow font-body">Products</p>
+            <h1 className="products-page-title font-display">The Luminaire Collection</h1>
+          </header>
+
+          <div className="products-page-grid">
+            {PRODUCTS.map((product) => (
+              <Link
+                key={product.id}
+                href={`/products/${product.id}`}
+                className="products-page-card"
+              >
+                <div className="products-page-card-media">
+                  <Image
+                    src={product.image}
+                    alt={product.name}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 640px) 50vw, (max-width: 1100px) 33vw, 25vw"
+                  />
+                </div>
+                <h2 className="products-page-card-title font-body">
+                  {product.name}
+                  <span className="products-page-card-type"> | {product.type}</span>
+                </h2>
+              </Link>
+            ))}
+          </div>
         </div>
       </section>
     </PageShell>

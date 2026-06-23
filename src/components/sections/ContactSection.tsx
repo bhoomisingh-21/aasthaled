@@ -12,7 +12,7 @@ const PROJECT_TYPES = [
 
 export function ContactSection() {
   return (
-    <section id="connect" className="connect section--light">
+    <section id="contact" className="connect section--light">
       <div className="connect-inner section-pad">
         <div className="connect-grid">
           <div className="connect-info">

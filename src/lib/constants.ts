@@ -16,7 +16,7 @@ export const NAV = [
   { href: "/#demo-center", label: "DEMO CENTER" },
   { href: "/#about", label: "ABOUT" },
   { href: "/#faq", label: "FAQ" },
-  { href: "/#connect", label: "CONNECT" },
+  { href: "/#contact", label: "CONNECT" },
 ] as const;
 
 export const HEADER_NAV = [
@@ -252,16 +252,16 @@ export const FOOTER_COLUMNS = [
     links: [
       { id: "about", label: "About", href: "/#about" },
       { id: "faq", label: "FAQ", href: "/#faq" },
-      { id: "connect", label: "Connect", href: "/#connect" },
+      { id: "connect", label: "Connect", href: "/#contact" },
     ],
   },
   {
     id: "support",
     title: "SUPPORT",
     links: [
-      { id: "catalogue", label: "Request Catalogue", href: "/#connect" },
-      { id: "consultation", label: "Project Consultation", href: "/#connect" },
-      { id: "specification", label: "Specification Support", href: "/#connect" },
+      { id: "catalogue", label: "Request Catalogue", href: "/#contact" },
+      { id: "consultation", label: "Project Consultation", href: "/#contact" },
+      { id: "specification", label: "Specification Support", href: "/#contact" },
     ],
   },
 ] as const;
