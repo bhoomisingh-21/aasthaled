@@ -37,7 +37,7 @@ export default function ProductsPage() {
                     alt={product.name}
                     fill
                     className="object-cover"
-                    sizes="(max-width: 640px) 50vw, (max-width: 1100px) 33vw, 25vw"
+                    sizes="(max-width: 767px) 45vw, (max-width: 1100px) 33vw, 25vw"
                   />
                 </div>
                 <h2 className="products-page-card-title font-body">

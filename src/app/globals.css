@@ -1515,6 +1515,7 @@ body.page-shell-body {
 }
 
 .products-page-topbar .back-link {
+  margin-top: 0;
   font-size: 12px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -1567,14 +1568,8 @@ body.page-shell-body {
 
 @media (max-width: 720px) {
   .products-page-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
-  }
-}
-
-@media (max-width: 420px) {
-  .products-page-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
   }
 }
 
@@ -1667,6 +1662,7 @@ body.page-shell-body {
 }
 
 .product-detail-topbar .back-link {
+  margin-top: 0;
   font-size: 12px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -2515,6 +2511,53 @@ button,
     padding-inline: clamp(1rem, 4vw, 1.25rem);
   }
 
+  .products-page {
+    padding: calc(3.75rem + env(safe-area-inset-top, 0px)) max(0.875rem, env(safe-area-inset-right)) 2rem max(0.875rem, env(safe-area-inset-left));
+  }
+
+  .products-page-topbar {
+    margin-bottom: 0.75rem;
+  }
+
+  .products-page-head {
+    margin-bottom: 1.15rem;
+  }
+
+  .products-page-title {
+    font-size: clamp(1.45rem, 6.2vw, 1.85rem);
+    line-height: 1.12;
+  }
+
+  .products-page-grid {
+    gap: 0.65rem;
+  }
+
+  .products-page-card-media {
+    border-radius: 10px;
+  }
+
+  .products-page-card-title {
+    font-size: 0.72rem;
+    margin-top: 0.5rem;
+    line-height: 1.35;
+  }
+
+  .product-detail {
+    padding: calc(3.75rem + env(safe-area-inset-top, 0px)) max(0.875rem, env(safe-area-inset-right)) 2rem max(0.875rem, env(safe-area-inset-left));
+  }
+
+  .product-detail-name {
+    font-size: clamp(1.3rem, 5.5vw, 1.65rem);
+  }
+
+  .product-detail-gallery-media {
+    border-radius: 12px;
+  }
+
+  .product-detail-more-grid {
+    gap: 0.65rem;
+  }
+
   .eyebrow {
     font-size: 10px;
     letter-spacing: 0.2em;
@@ -2616,8 +2659,6 @@ button,
 
   .about-quote { font-size: clamp(1.35rem, 5.5vw, 1.85rem); }
 
-  .about-stats-bar { grid-template-columns: 1fr 1fr; }
-
   .faq-inner {
     padding-top: clamp(3rem, 14vw, 4.5rem);
     padding-bottom: clamp(3rem, 14vw, 4.5rem);
@@ -2673,8 +2714,23 @@ button,
     padding-inline: 1rem;
   }
 
-  .products-page-title,
-  .product-detail-title { font-size: clamp(2rem, 8vw, 3rem); }
+  .product-detail-title { font-size: clamp(1.45rem, 6.2vw, 2rem); }
+}
+
+@media (max-width: 374px) {
+  .products-page-title {
+    font-size: 1.35rem;
+  }
+
+  .products-page-count,
+  .products-page-topbar .back-link {
+    font-size: 10px;
+    letter-spacing: 0.1em;
+  }
+
+  .products-page-grid {
+    gap: 0.5rem;
+  }
 }
 
 @media (max-width: 480px) {
