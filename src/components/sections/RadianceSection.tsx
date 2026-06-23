@@ -73,20 +73,28 @@ export function RadianceSection() {
         start: "top top",
         end: () => `+=${LIGHT_SPECTRUM.length * 100}%`,
         pin: true,
-        scrub: 0.55,
+        scrub: true,
+        snap: {
+          snapTo: (value) => {
+            const step = 1 / LIGHT_SPECTRUM.length;
+            return Math.round(value / step) * step;
+          },
+          duration: { min: 0.2, max: 0.5 },
+          delay: 0,
+          ease: "power2.inOut",
+        },
         onUpdate: (self) => {
           const n = LIGHT_SPECTRUM.length;
-          const p = self.progress * n;
-          const i = Math.min(n - 1, Math.floor(p));
-          const t = p - i;
-          const from = LIGHT_SPECTRUM[i];
-          const to = LIGHT_SPECTRUM[Math.min(i + 1, n - 1)];
+          const i = Math.min(n - 1, Math.floor(self.progress * n));
+          const scene = LIGHT_SPECTRUM[i];
+          const markerPos = n > 1 ? (i / (n - 1)) * 100 : 0;
+          const needleDeg = n > 1 ? -52 + (i / (n - 1)) * 104 : 0;
 
-          applySpectrum(orbRef.current, beamRef.current, poolRef.current, from, to, t);
-          markerRef.current?.style.setProperty("left", `${self.progress * 100}%`);
+          applySpectrum(orbRef.current, beamRef.current, poolRef.current, scene, scene, 0);
+          markerRef.current?.style.setProperty("left", `${markerPos}%`);
           needleRef.current?.style.setProperty(
             "transform",
-            `translate(-50%, -100%) rotate(${-52 + self.progress * 104}deg)`,
+            `translate(-50%, -100%) rotate(${needleDeg}deg)`,
           );
           setIndex(i);
         },
@@ -159,13 +167,16 @@ export function RadianceSection() {
               </linearGradient>
             </defs>
           </svg>
-          {LIGHT_SPECTRUM.map((s, tick) => (
+          {LIGHT_SPECTRUM.map((s, tick) => {
+            const step = LIGHT_SPECTRUM.length > 1 ? 104 / (LIGHT_SPECTRUM.length - 1) : 0;
+            return (
             <span
               key={s.kelvin}
               className={`radiance-tick${tick === index ? " radiance-tick--active" : ""}`}
-              style={{ transform: `rotate(${-52 + tick * 52}deg)` }}
+              style={{ transform: `rotate(${-52 + tick * step}deg)` }}
             />
-          ))}
+            );
+          })}
           <div ref={needleRef} className="radiance-needle" />
         </div>
 

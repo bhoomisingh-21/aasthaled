@@ -1,17 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { PRODUCTS } from "@/lib/constants";
-import { useScrollReady } from "@/hooks/ScrollProvider";
 
-gsap.registerPlugin(ScrollTrigger);
-
-const MOBILE_MQ = "(max-width: 767px)";
-const COLS_PER_VIEW = 2;
+const AUTO_SPEED = 0.6;
+const PAUSE_AFTER_INTERACTION_MS = 3500;
 
 function ArrowIcon({ dir }: { dir: "left" | "right" }) {
   return (
@@ -27,95 +22,62 @@ function ArrowIcon({ dir }: { dir: "left" | "right" }) {
   );
 }
 
+function formatIndex(n: number) {
+  return String(n).padStart(2, "0");
+}
+
 export function ObjectsSection() {
-  const ready = useScrollReady();
-  const ref = useRef<HTMLElement>(null);
   const scrollWrapRef = useRef<HTMLDivElement>(null);
-  const trackRef = useRef<HTMLDivElement>(null);
-  const stRef = useRef<ScrollTrigger | null>(null);
+  const pausedRef = useRef(false);
+  const pauseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const draggingRef = useRef(false);
+  const didDragRef = useRef(false);
+  const dragStartXRef = useRef(0);
+  const dragStartScrollRef = useRef(0);
   const hoverTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const animatingRef = useRef(false);
-  const [canScroll, setCanScroll] = useState(false);
 
-  const isMobile = useCallback(() => window.matchMedia(MOBILE_MQ).matches, []);
+  const carouselItems = useMemo(
+    () => [...PRODUCTS, ...PRODUCTS].map((product, i) => ({
+      product,
+      key: `${product.id}-${i}`,
+      index: (i % PRODUCTS.length) + 1,
+    })),
+    [],
+  );
 
-  const getMax = useCallback(() => {
-    const track = trackRef.current;
-    const wrap = scrollWrapRef.current;
-    if (!track || !wrap) return 0;
-    return Math.max(0, track.scrollWidth - wrap.clientWidth);
+  const pauseAutoScroll = useCallback((resumeAfterMs = PAUSE_AFTER_INTERACTION_MS) => {
+    pausedRef.current = true;
+    if (pauseTimerRef.current) clearTimeout(pauseTimerRef.current);
+    pauseTimerRef.current = setTimeout(() => {
+      pausedRef.current = false;
+    }, resumeAfterMs);
   }, []);
 
   const getStep = useCallback(() => {
-    const track = trackRef.current;
-    if (!track) return 320;
-    const panel = track.querySelector<HTMLElement>(".object-panel");
+    const wrap = scrollWrapRef.current;
+    if (!wrap) return 320;
+    const panel = wrap.querySelector<HTMLElement>(".object-panel");
     if (!panel) return 320;
-    const gap = parseFloat(getComputedStyle(track).gap) || 24;
+    const gap = parseFloat(getComputedStyle(panel.parentElement!).gap) || 24;
     return panel.offsetWidth + gap;
   }, []);
 
-  const getCurrentDist = useCallback(() => {
-    const track = trackRef.current;
-    if (!track) return 0;
-    const x = gsap.getProperty(track, "x");
-    const num = typeof x === "number" ? x : parseFloat(String(x)) || 0;
-    return Math.max(0, -num);
-  }, []);
-
-  const scrollToDist = useCallback(
-    (targetDist: number) => {
-      const st = stRef.current;
-      if (!st || animatingRef.current) return;
-
-      const max = getMax();
-      if (max <= 0) return;
-
-      const clamped = gsap.utils.clamp(0, max, targetDist);
-      if (Math.abs(clamped - getCurrentDist()) < 2) return;
-
-      const progress = clamped / max;
-      const targetScroll = st.start + progress * (st.end - st.start);
-      const startScroll = document.documentElement.scrollTop;
-
-      animatingRef.current = true;
-
-      gsap.to(
-        { y: startScroll },
-        {
-          y: targetScroll,
-          duration: 0.75,
-          ease: "power2.inOut",
-          onUpdate() {
-            document.documentElement.scrollTop = this.targets()[0].y;
-          },
-          onComplete: () => {
-            animatingRef.current = false;
-          },
-        },
-      );
-    },
-    [getMax, getCurrentDist],
-  );
-
   const nudge = useCallback(
     (direction: 1 | -1) => {
-      if (isMobile()) {
-        scrollWrapRef.current?.scrollBy({ left: direction * getStep(), behavior: "smooth" });
-        return;
-      }
-      scrollToDist(getCurrentDist() + direction * getStep());
+      const wrap = scrollWrapRef.current;
+      if (!wrap) return;
+      pauseAutoScroll();
+      wrap.scrollBy({ left: direction * getStep(), behavior: "smooth" });
     },
-    [isMobile, scrollToDist, getCurrentDist, getStep],
+    [getStep, pauseAutoScroll],
   );
 
   const startHover = useCallback(
     (direction: 1 | -1) => {
-      if (isMobile()) return;
       nudge(direction);
       hoverTimerRef.current = setInterval(() => nudge(direction), 450);
     },
-    [isMobile, nudge],
+    [nudge],
   );
 
   const stopHover = useCallback(() => {
@@ -127,99 +89,111 @@ export function ObjectsSection() {
 
   useEffect(() => () => stopHover(), [stopHover]);
 
-  const checkOverflow = useCallback(() => {
-    const track = trackRef.current;
-    const wrap = scrollWrapRef.current;
-    if (!track || !wrap) return;
-    setCanScroll(track.scrollWidth > wrap.clientWidth + 4);
-  }, []);
-
   useEffect(() => {
-    if (!ready) return;
-    checkOverflow();
-    window.addEventListener("resize", checkOverflow);
-    const track = trackRef.current;
-    track?.querySelectorAll("img").forEach((img) => {
-      if (!img.complete) img.addEventListener("load", checkOverflow, { once: true });
-    });
-    return () => window.removeEventListener("resize", checkOverflow);
-  }, [ready, checkOverflow]);
-
-  useEffect(() => {
-    if (!ready) return;
-
-    const track = trackRef.current;
-    const section = ref.current;
     const wrap = scrollWrapRef.current;
-    if (!track || !section || !wrap) return;
+    if (!wrap) return;
 
-    if (isMobile()) {
-      gsap.set(track, { clearProps: "transform" });
-      section.classList.add("objects--touch");
-      return () => section.classList.remove("objects--touch");
-    }
+    let raf = 0;
 
-    let st: ScrollTrigger | null = null;
-
-    const getMaxLocal = () => Math.max(0, track.scrollWidth - wrap.clientWidth);
-
-    const mountScroll = () => {
-      st?.kill();
-      st = null;
-      stRef.current = null;
-
-      const max = getMaxLocal();
-      if (max <= 0) {
-        section.classList.remove("objects--scrollable");
-        gsap.set(track, { clearProps: "transform" });
-        return;
+    const loop = () => {
+      const half = wrap.scrollWidth / 2;
+      if (half > wrap.clientWidth && !pausedRef.current && !draggingRef.current) {
+        wrap.scrollLeft += AUTO_SPEED;
+        if (wrap.scrollLeft >= half) {
+          wrap.scrollLeft -= half;
+        }
       }
-
-      section.classList.add("objects--scrollable");
-      setCanScroll(true);
-      st = ScrollTrigger.create({
-        id: "objects-scroll",
-        trigger: section,
-        start: "top top",
-        end: () => `+=${getMaxLocal()}`,
-        pin: section,
-        scrub: 0.8,
-        anticipatePin: 1,
-        invalidateOnRefresh: true,
-        onUpdate: (self) => {
-          gsap.set(track, { x: -self.progress * getMaxLocal() });
-        },
-      });
-      stRef.current = st;
+      raf = requestAnimationFrame(loop);
     };
 
-    const ctx = gsap.context(mountScroll, ref);
-
-    const refresh = () => {
-      mountScroll();
-      checkOverflow();
+    const onPointerDown = (e: PointerEvent) => {
+      if (e.button !== 0) return;
+      didDragRef.current = false;
+      draggingRef.current = false;
+      dragStartXRef.current = e.clientX;
+      dragStartScrollRef.current = wrap.scrollLeft;
+      pauseAutoScroll(PAUSE_AFTER_INTERACTION_MS * 2);
     };
-    window.addEventListener("load", refresh);
-    window.addEventListener("resize", refresh);
-    track.querySelectorAll("img").forEach((img) => {
-      if (!img.complete) img.addEventListener("load", refresh, { once: true });
-    });
-    requestAnimationFrame(refresh);
+
+    const onPointerMove = (e: PointerEvent) => {
+      const delta = e.clientX - dragStartXRef.current;
+      if (!draggingRef.current && Math.abs(delta) > 8) {
+        draggingRef.current = true;
+        didDragRef.current = true;
+        wrap.setPointerCapture(e.pointerId);
+      }
+      if (!draggingRef.current) return;
+      wrap.scrollLeft = dragStartScrollRef.current - delta;
+      const half = wrap.scrollWidth / 2;
+      if (half > 0) {
+        if (wrap.scrollLeft >= half) wrap.scrollLeft -= half;
+        if (wrap.scrollLeft < 0) wrap.scrollLeft += half;
+      }
+    };
+
+    const onPointerUp = (e: PointerEvent) => {
+      if (draggingRef.current) {
+        wrap.releasePointerCapture(e.pointerId);
+      }
+      draggingRef.current = false;
+      pauseAutoScroll();
+    };
+
+    const onWheel = (e: WheelEvent) => {
+      const horizontal = Math.abs(e.deltaX) > Math.abs(e.deltaY) || e.shiftKey;
+      if (!horizontal) return;
+      e.preventDefault();
+      wrap.scrollLeft += e.deltaX + (e.shiftKey ? e.deltaY : 0);
+      const half = wrap.scrollWidth / 2;
+      if (half > 0) {
+        if (wrap.scrollLeft >= half) wrap.scrollLeft -= half;
+        if (wrap.scrollLeft < 0) wrap.scrollLeft += half;
+      }
+      pauseAutoScroll();
+    };
+
+    const onScroll = () => {
+      if (draggingRef.current || pausedRef.current) {
+        const half = wrap.scrollWidth / 2;
+        if (half > wrap.clientWidth) {
+          if (wrap.scrollLeft >= half) wrap.scrollLeft -= half;
+          if (wrap.scrollLeft < 0) wrap.scrollLeft += half;
+        }
+      }
+    };
+
+    wrap.addEventListener("pointerdown", onPointerDown);
+    wrap.addEventListener("pointermove", onPointerMove);
+    wrap.addEventListener("pointerup", onPointerUp);
+    wrap.addEventListener("pointercancel", onPointerUp);
+    wrap.addEventListener("wheel", onWheel, { passive: false });
+    wrap.addEventListener("scroll", onScroll, { passive: true });
+    wrap.addEventListener("touchstart", () => pauseAutoScroll(), { passive: true });
+
+    const onEnter = () => { pausedRef.current = true; };
+    const onLeave = () => pauseAutoScroll(800);
+
+    wrap.addEventListener("mouseenter", onEnter);
+    wrap.addEventListener("mouseleave", onLeave);
+
+    raf = requestAnimationFrame(loop);
 
     return () => {
-      window.removeEventListener("load", refresh);
-      window.removeEventListener("resize", refresh);
-      st?.kill();
-      stRef.current = null;
-      section.classList.remove("objects--scrollable");
-      ctx.revert();
+      cancelAnimationFrame(raf);
+      if (pauseTimerRef.current) clearTimeout(pauseTimerRef.current);
+      wrap.removeEventListener("pointerdown", onPointerDown);
+      wrap.removeEventListener("pointermove", onPointerMove);
+      wrap.removeEventListener("pointerup", onPointerUp);
+      wrap.removeEventListener("pointercancel", onPointerUp);
+      wrap.removeEventListener("wheel", onWheel);
+      wrap.removeEventListener("scroll", onScroll);
+      wrap.removeEventListener("mouseenter", onEnter);
+      wrap.removeEventListener("mouseleave", onLeave);
     };
-  }, [ready, isMobile, checkOverflow]);
-
-  const showArrows = canScroll;
+  }, [pauseAutoScroll]);
 
   return (
-    <section id="products" ref={ref} className="objects section--alt">
+    <section id="products" className="objects section--alt">
       <header className="objects-head">
         <p className="eyebrow font-body">Products</p>
         <h2 className="objects-title font-display">Our luminaires</h2>
@@ -231,50 +205,48 @@ export function ObjectsSection() {
         </Link>
       </header>
 
-      {showArrows && (
-        <>
-          <button
-            type="button"
-            className="objects-nav objects-nav--prev"
-            aria-label="Previous products"
-            onClick={() => nudge(-1)}
-            onMouseEnter={() => startHover(-1)}
-            onMouseLeave={stopHover}
-          >
-            <ArrowIcon dir="left" />
-          </button>
+      <button
+        type="button"
+        className="objects-nav objects-nav--prev"
+        aria-label="Previous products"
+        onClick={() => nudge(-1)}
+        onMouseEnter={() => startHover(-1)}
+        onMouseLeave={stopHover}
+      >
+        <ArrowIcon dir="left" />
+      </button>
 
-          <button
-            type="button"
-            className="objects-nav objects-nav--next"
-            aria-label="Next products"
-            onClick={() => nudge(1)}
-            onMouseEnter={() => startHover(1)}
-            onMouseLeave={stopHover}
-          >
-            <ArrowIcon dir="right" />
-          </button>
-        </>
-      )}
+      <button
+        type="button"
+        className="objects-nav objects-nav--next"
+        aria-label="Next products"
+        onClick={() => nudge(1)}
+        onMouseEnter={() => startHover(1)}
+        onMouseLeave={stopHover}
+      >
+        <ArrowIcon dir="right" />
+      </button>
 
       <div ref={scrollWrapRef} className="objects-scroll-wrap">
-        <div
-          ref={trackRef}
-          className="objects-track"
-          style={{ "--object-cols": COLS_PER_VIEW } as CSSProperties}
-        >
-          {PRODUCTS.map((product, i) => (
+        <div className="objects-track">
+          {carouselItems.map(({ product, key, index }) => (
             <Link
-              key={product.id}
+              key={key}
               href={`/products/${product.id}`}
               className="object-panel"
-              style={{ "--i": i } as CSSProperties}
+              draggable={false}
+              onClick={(e) => {
+                if (didDragRef.current) {
+                  e.preventDefault();
+                  didDragRef.current = false;
+                }
+              }}
             >
               <div className="object-panel-img">
                 <Image src={product.image} alt={product.name} fill className="object-cover" sizes="380px" />
               </div>
               <div className="object-panel-meta font-body">
-                <span className="object-index">0{i + 1}</span>
+                <span className="object-index">{formatIndex(index)}</span>
                 <h3 className="font-display">{product.name}</h3>
                 <p>{product.type}</p>
               </div>

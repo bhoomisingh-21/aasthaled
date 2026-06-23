@@ -860,7 +860,7 @@ body.page-shell-body {
   position: relative;
   height: 2px;
   border-radius: 999px;
-  background: linear-gradient(90deg, #c9922e 0%, #e8b84a 18%, #f5f2eb 50%, #7ec8d0 82%, #52b5c0 100%);
+  background: linear-gradient(90deg, #e8b84a 0%, #f5f2eb 50%, #52b5c0 100%);
 }
 
 .radiance-scale-marker {
@@ -943,58 +943,20 @@ body.page-shell-body {
   border-top: 1px solid var(--color-border);
 }
 
-.objects.objects--scrollable {
-  min-height: 100vh;
-}
-
 @media (max-width: 767px) {
-  .objects {
-    min-height: auto;
-  }
-
   .objects-head {
     padding: clamp(2rem, 8vw, 2.75rem) clamp(1rem, 4vw, 1.25rem) 0.75rem;
   }
 
-  .objects.objects--touch .objects-scroll-wrap {
-    overflow-x: auto;
-    overflow-y: hidden;
-    -webkit-overflow-scrolling: touch;
-    scroll-snap-type: x proximity;
-    scroll-padding-inline: 1.25rem;
-    scrollbar-width: none;
+  .objects-nav {
+    top: 42%;
   }
 
-  .objects.objects--touch .objects-scroll-wrap::-webkit-scrollbar {
-    display: none;
-  }
-
-  .objects.objects--touch .objects-track {
-    transform: none !important;
-    will-change: auto;
-    padding-inline: 1.25rem;
-    padding-bottom: 1.25rem;
-    gap: 1rem;
-    grid-auto-columns: min(300px, calc(100vw - 2.5rem));
-    grid-template-rows: repeat(2, auto);
-    grid-auto-flow: column;
-    width: max-content;
-  }
-
-  .objects.objects--touch .object-panel {
-    width: 100%;
-    scroll-snap-align: start;
-  }
-
-  .objects.objects--touch .objects-nav {
-    top: 30%;
-  }
-
-  .objects.objects--touch .objects-nav--prev {
+  .objects-nav--prev {
     left: 0.35rem;
   }
 
-  .objects.objects--touch .objects-nav--next {
+  .objects-nav--next {
     right: 0.35rem;
   }
 }
@@ -1013,9 +975,20 @@ body.page-shell-body {
 
 .objects-scroll-wrap {
   position: relative;
-  overflow: hidden;
-  max-width: 1280px;
-  margin: 0 auto;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  cursor: grab;
+  user-select: none;
+}
+
+.objects-scroll-wrap::-webkit-scrollbar {
+  display: none;
+}
+
+.objects-scroll-wrap:active {
+  cursor: grabbing;
 }
 
 .objects-nav {
@@ -1056,29 +1029,15 @@ body.page-shell-body {
 }
 
 .objects-track {
-  display: grid;
-  grid-template-rows: repeat(2, auto);
-  grid-auto-flow: column;
-  grid-auto-columns: clamp(220px, 42vw, 400px);
+  display: flex;
   gap: clamp(1.25rem, 3vw, 2rem);
   padding: 0 clamp(1.5rem, 5vw, 3rem) clamp(3rem, 8vw, 5rem);
   width: max-content;
-  will-change: transform;
-}
-
-.objects:not(.objects--scrollable) .objects-track {
-  width: 100%;
-  max-width: 900px;
-  margin: 0 auto;
-  grid-auto-columns: 1fr;
-  grid-template-columns: repeat(2, 1fr);
-  grid-auto-flow: row;
-  grid-template-rows: auto auto;
 }
 
 .object-panel {
   flex-shrink: 0;
-  width: 100%;
+  width: clamp(260px, 32vw, 380px);
   padding: 0;
   border: none;
   background: none;
