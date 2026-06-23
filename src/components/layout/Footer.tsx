@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { BRAND, FOOTER_COLUMNS, FOOTER_SOCIAL } from "@/lib/constants";
 
 export function Footer() {
@@ -51,7 +52,11 @@ export function Footer() {
                   <ul className={`site-footer-links ${isOpen ? "site-footer-links--open" : ""}`}>
                     {col.links.map((link) => (
                       <li key={`${col.id}-${link.id}`}>
-                        <a href={link.href} className="font-body">{link.label}</a>
+                        {link.href.startsWith("/") ? (
+                          <Link href={link.href} className="font-body">{link.label}</Link>
+                        ) : (
+                          <a href={link.href} className="font-body">{link.label}</a>
+                        )}
                       </li>
                     ))}
                   </ul>

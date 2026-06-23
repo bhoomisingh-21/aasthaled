@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { PageShell } from "@/components/layout/PageShell";
+import { BackLink } from "@/components/layout/BackLink";
 import { PRODUCTS } from "@/lib/constants";
 
 export function generateStaticParams() {
@@ -27,9 +28,9 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 
   return (
     <PageShell>
-      <article className="product-detail section-pad">
+      <article className="product-detail section-pad section--light">
         <nav className="product-detail-nav font-body">
-          <Link href="/products">All products</Link>
+          <BackLink href="/products">All products</BackLink>
           <span aria-hidden>/</span>
           <span>{product.name}</span>
         </nav>
@@ -55,9 +56,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
               <Link href="/#connect" className="link-cine link-cine--btn font-body">
                 Request catalogue
               </Link>
-              <Link href="/products" className="link-cine font-body">
-                View all
-              </Link>
+              <BackLink href="/products">View all</BackLink>
             </div>
           </div>
         </div>

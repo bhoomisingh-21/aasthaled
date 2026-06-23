@@ -10,18 +10,18 @@ export const BRAND = {
 } as const;
 
 export const NAV = [
-  { href: "#hero", label: "AASTHA LED" },
+  { href: "/#hero", label: "AASTHA LED" },
   { href: "/products", label: "PRODUCTS" },
-  { href: "#spaces", label: "SPACES" },
-  { href: "#demo-center", label: "DEMO CENTER" },
-  { href: "#about", label: "ABOUT" },
-  { href: "#faq", label: "FAQ" },
-  { href: "#connect", label: "CONNECT" },
+  { href: "/#spaces", label: "SPACES" },
+  { href: "/#demo-center", label: "DEMO CENTER" },
+  { href: "/#about", label: "ABOUT" },
+  { href: "/#faq", label: "FAQ" },
+  { href: "/#connect", label: "CONNECT" },
 ] as const;
 
 export const HEADER_NAV = [
   { href: "/products", label: "Products" },
-  { href: "#about", label: "About" },
+  { href: "/#about", label: "About" },
 ] as const;
 
 export const CONTACT = {
@@ -113,8 +113,6 @@ export const ILLUMINATED_SPACES = [
   { id: "residence", label: "Private Residence", location: "Mumbai, India", dark: u("1486406146926-c627a92ad1ab"), lit: u("1600607687939-ce8a6c25118c") },
   { id: "hotel", label: "Boutique Hotel Lobby", location: "Delhi, India", dark: u("1497366216548-37526070297c"), lit: u("1542314831-068cd1dbfeeb") },
   { id: "restaurant", label: "Fine Dining", location: "Bangalore, India", dark: u("1445205170230-053b83016050"), lit: u("1600210492486-724fe3c689dd") },
-  { id: "gallery", label: "Art Gallery", location: "Hyderabad, India", dark: u("1600607687920-4e2a09cf159d"), lit: u("1616486338812-3dadae4b4ace") },
-  { id: "corporate", label: "Corporate Headquarters", location: "Pune, India", dark: u("1497366216548-37526070297c"), lit: u("1600585154340-be6161a56a0c") },
 ] as const;
 
 /** @deprecated use ILLUMINATED_SPACES */
@@ -190,26 +188,26 @@ export const FOOTER_COLUMNS = [
     title: "EXPLORE",
     links: [
       { id: "products", label: "Products", href: "/products" },
-      { id: "spaces", label: "Illuminated Spaces", href: "#spaces" },
-      { id: "demo-center", label: "Demo Center", href: "#demo-center" },
+      { id: "spaces", label: "Illuminated Spaces", href: "/#spaces" },
+      { id: "demo-center", label: "Demo Center", href: "/#demo-center" },
     ],
   },
   {
     id: "company",
     title: "COMPANY",
     links: [
-      { id: "about", label: "About", href: "#about" },
-      { id: "faq", label: "FAQ", href: "#faq" },
-      { id: "connect", label: "Connect", href: "#connect" },
+      { id: "about", label: "About", href: "/#about" },
+      { id: "faq", label: "FAQ", href: "/#faq" },
+      { id: "connect", label: "Connect", href: "/#connect" },
     ],
   },
   {
     id: "support",
     title: "SUPPORT",
     links: [
-      { id: "catalogue", label: "Request Catalogue", href: "#connect" },
-      { id: "consultation", label: "Project Consultation", href: "#connect" },
-      { id: "specification", label: "Specification Support", href: "#connect" },
+      { id: "catalogue", label: "Request Catalogue", href: "/#connect" },
+      { id: "consultation", label: "Project Consultation", href: "/#connect" },
+      { id: "specification", label: "Specification Support", href: "/#connect" },
     ],
   },
 ] as const;

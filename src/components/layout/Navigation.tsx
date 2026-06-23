@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import gsap from "gsap";
 import { NAV, BRAND, HEADER_NAV } from "@/lib/constants";
 
@@ -21,9 +22,29 @@ function MenuIcon({ open }: { open: boolean }) {
   );
 }
 
+function NavAnchor({ href, className, children, onClick }: {
+  href: string;
+  className?: string;
+  children: React.ReactNode;
+  onClick?: () => void;
+}) {
+  if (href.startsWith("/")) {
+    return (
+      <Link href={href} className={className} onClick={onClick}>
+        {children}
+      </Link>
+    );
+  }
+  return (
+    <a href={href} className={className} onClick={onClick}>
+      {children}
+    </a>
+  );
+}
+
 export function Navigation({ visible }: { visible: boolean }) {
   const [open, setOpen] = useState(false);
-  const menuLinks = NAV.filter((item) => item.href !== "#hero");
+  const menuLinks = NAV.filter((item) => item.href !== "/#hero");
 
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
@@ -55,21 +76,21 @@ export function Navigation({ visible }: { visible: boolean }) {
             </button>
           </div>
 
-          <a href="#hero" className="site-header-logo font-display">
+          <Link href="/#hero" className="site-header-logo font-display">
             {BRAND.name}
-          </a>
+          </Link>
 
           <div className="site-header-side site-header-side--right">
             <nav className="site-header-links" aria-label="Primary">
               {HEADER_NAV.map(({ href, label }) => (
-                <a key={href} href={href} className="site-header-link font-mono">
+                <NavAnchor key={href} href={href} className="site-header-link font-mono">
                   {label}
-                </a>
+                </NavAnchor>
               ))}
             </nav>
-            <a href="#connect" className="site-header-cta font-mono">
+            <NavAnchor href="/#connect" className="site-header-cta font-mono">
               Connect
-            </a>
+            </NavAnchor>
           </div>
         </div>
       </header>
@@ -78,14 +99,14 @@ export function Navigation({ visible }: { visible: boolean }) {
         <div className="site-menu-panel">
           <nav className="site-menu-nav">
             {menuLinks.map(({ href, label }) => (
-              <a
+              <NavAnchor
                 key={`${href}-${label}`}
                 href={href}
                 className="site-menu-link font-body"
                 onClick={() => setOpen(false)}
               >
                 {label}
-              </a>
+              </NavAnchor>
             ))}
           </nav>
         </div>

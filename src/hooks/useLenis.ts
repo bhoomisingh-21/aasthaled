@@ -23,6 +23,7 @@ export function useLenis(enabled = true) {
     }
 
     const lenis = new Lenis({ duration: 1.4, smoothWheel: true });
+    document.documentElement.classList.add("lenis", "lenis-smooth");
 
     lenis.on("scroll", ScrollTrigger.update);
     ScrollTrigger.scrollerProxy(document.documentElement, {
@@ -45,6 +46,7 @@ export function useLenis(enabled = true) {
 
     return () => {
       lenis.destroy();
+      document.documentElement.classList.remove("lenis", "lenis-smooth");
       gsap.ticker.remove(tick);
     };
   }, [enabled]);

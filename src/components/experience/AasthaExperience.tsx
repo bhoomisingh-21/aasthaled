@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { CinematicLoader } from "@/components/loader/CinematicLoader";
 import { useSiteLoaded } from "@/hooks/useSiteLoaded";
 import { Navigation } from "@/components/layout/Navigation";
@@ -16,6 +17,17 @@ import { ScrollProvider } from "@/hooks/ScrollProvider";
 
 export function AasthaExperience() {
   const { loaded, showLoader, onLoaderDone } = useSiteLoaded(true);
+
+  useEffect(() => {
+    if (!loaded) return;
+    const hash = window.location.hash;
+    if (!hash) return;
+    const id = hash.slice(1);
+    const timer = window.setTimeout(() => {
+      document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 400);
+    return () => window.clearTimeout(timer);
+  }, [loaded]);
 
   return (
     <ScrollProvider enabled={loaded}>

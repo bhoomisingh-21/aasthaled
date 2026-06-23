@@ -9,6 +9,8 @@ import { useScrollReady } from "@/hooks/ScrollProvider";
 
 gsap.registerPlugin(ScrollTrigger);
 
+const SCENE_COUNT = ILLUMINATED_SPACES.length;
+
 export function AtmospheresSection() {
   const ready = useScrollReady();
   const ref = useRef<HTMLElement>(null);
@@ -23,13 +25,24 @@ export function AtmospheresSection() {
       ScrollTrigger.create({
         trigger: ref.current,
         start: "top top",
-        end: () => `+=${ILLUMINATED_SPACES.length * 100}%`,
+        end: () => `+=${SCENE_COUNT * 100}%`,
         pin: true,
-        scrub: 0.6,
+        scrub: true,
+        snap: {
+          snapTo: (value) => {
+            const step = 1 / SCENE_COUNT;
+            return Math.round(value / step) * step;
+          },
+          duration: { min: 0.2, max: 0.5 },
+          delay: 0,
+          ease: "power2.inOut",
+        },
         onUpdate: (self) => {
-          const i = Math.min(ILLUMINATED_SPACES.length - 1, Math.floor(self.progress * ILLUMINATED_SPACES.length));
+          const raw = self.progress * SCENE_COUNT;
+          const i = Math.min(SCENE_COUNT - 1, Math.floor(raw));
+          const local = raw - i;
           setIndex(i);
-          setLit(self.progress > 0.06);
+          setLit(local > 0.1);
         },
       });
     }, ref);
@@ -66,6 +79,11 @@ export function AtmospheresSection() {
         <p className="atmospheres-sub font-body">Spaces we have illuminated</p>
         <h2 className="atmospheres-title font-display">{scene.label}</h2>
         <p className="atmospheres-location font-body">{scene.location}</p>
+        <div className="atmospheres-dots" aria-hidden>
+          {ILLUMINATED_SPACES.map((space, i) => (
+            <span key={space.id} className={`atmospheres-dot${i === index ? " atmospheres-dot--active" : ""}`} />
+          ))}
+        </div>
       </div>
     </section>
   );

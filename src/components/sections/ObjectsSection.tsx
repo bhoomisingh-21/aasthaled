@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, type CSSProperties } from "react";
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Image from "next/image";
@@ -11,6 +11,7 @@ import { useScrollReady } from "@/hooks/ScrollProvider";
 gsap.registerPlugin(ScrollTrigger);
 
 const MOBILE_MQ = "(max-width: 767px)";
+const COLS_PER_VIEW = 2;
 
 function ArrowIcon({ dir }: { dir: "left" | "right" }) {
   return (
@@ -34,19 +35,16 @@ export function ObjectsSection() {
   const stRef = useRef<ScrollTrigger | null>(null);
   const hoverTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const animatingRef = useRef(false);
+  const [canScroll, setCanScroll] = useState(false);
 
   const isMobile = useCallback(() => window.matchMedia(MOBILE_MQ).matches, []);
 
   const getMax = useCallback(() => {
     const track = trackRef.current;
-    if (!track) return 0;
-    return Math.max(0, track.scrollWidth - window.innerWidth);
+    const wrap = scrollWrapRef.current;
+    if (!track || !wrap) return 0;
+    return Math.max(0, track.scrollWidth - wrap.clientWidth);
   }, []);
-
-  const getExplore = useCallback(
-    (multiplier: number) => window.innerHeight * multiplier,
-    [],
-  );
 
   const getStep = useCallback(() => {
     const track = trackRef.current;
@@ -71,14 +69,12 @@ export function ObjectsSection() {
       if (!st || animatingRef.current) return;
 
       const max = getMax();
-      const explore = getExplore(0.45);
-      const total = max + explore;
-      if (total <= 0) return;
+      if (max <= 0) return;
 
       const clamped = gsap.utils.clamp(0, max, targetDist);
       if (Math.abs(clamped - getCurrentDist()) < 2) return;
 
-      const progress = clamped / total;
+      const progress = clamped / max;
       const targetScroll = st.start + progress * (st.end - st.start);
       const startScroll = document.documentElement.scrollTop;
 
@@ -99,7 +95,7 @@ export function ObjectsSection() {
         },
       );
     },
-    [getMax, getExplore, getCurrentDist],
+    [getMax, getCurrentDist],
   );
 
   const nudge = useCallback(
@@ -131,12 +127,31 @@ export function ObjectsSection() {
 
   useEffect(() => () => stopHover(), [stopHover]);
 
+  const checkOverflow = useCallback(() => {
+    const track = trackRef.current;
+    const wrap = scrollWrapRef.current;
+    if (!track || !wrap) return;
+    setCanScroll(track.scrollWidth > wrap.clientWidth + 4);
+  }, []);
+
+  useEffect(() => {
+    if (!ready) return;
+    checkOverflow();
+    window.addEventListener("resize", checkOverflow);
+    const track = trackRef.current;
+    track?.querySelectorAll("img").forEach((img) => {
+      if (!img.complete) img.addEventListener("load", checkOverflow, { once: true });
+    });
+    return () => window.removeEventListener("resize", checkOverflow);
+  }, [ready, checkOverflow]);
+
   useEffect(() => {
     if (!ready) return;
 
     const track = trackRef.current;
     const section = ref.current;
-    if (!track || !section) return;
+    const wrap = scrollWrapRef.current;
+    if (!track || !section || !wrap) return;
 
     if (isMobile()) {
       gsap.set(track, { clearProps: "transform" });
@@ -144,56 +159,64 @@ export function ObjectsSection() {
       return () => section.classList.remove("objects--touch");
     }
 
-    const ctx = gsap.context(() => {
-      const getMaxLocal = () => Math.max(0, track.scrollWidth - window.innerWidth);
-      const explore = () => window.innerHeight * 0.45;
+    let st: ScrollTrigger | null = null;
 
-      const st = ScrollTrigger.create({
+    const getMaxLocal = () => Math.max(0, track.scrollWidth - wrap.clientWidth);
+
+    const mountScroll = () => {
+      st?.kill();
+      st = null;
+      stRef.current = null;
+
+      const max = getMaxLocal();
+      if (max <= 0) {
+        section.classList.remove("objects--scrollable");
+        gsap.set(track, { clearProps: "transform" });
+        return;
+      }
+
+      section.classList.add("objects--scrollable");
+      setCanScroll(true);
+      st = ScrollTrigger.create({
         id: "objects-scroll",
         trigger: section,
         start: "top top",
-        end: () => {
-          const max = getMaxLocal();
-          return `+=${max + explore()}`;
-        },
+        end: () => `+=${getMaxLocal()}`,
         pin: section,
-        scrub: 1,
+        scrub: 0.8,
         anticipatePin: 1,
         invalidateOnRefresh: true,
         onUpdate: (self) => {
-          const max = getMaxLocal();
-          const extra = explore();
-          const total = max + extra;
-          const dist = self.progress * total;
-
-          if (dist <= max) {
-            gsap.set(track, { x: -dist });
-          } else {
-            const back = (dist - max) / extra;
-            gsap.set(track, { x: -max + back * max });
-          }
+          gsap.set(track, { x: -self.progress * getMaxLocal() });
         },
       });
-
       stRef.current = st;
-    }, ref);
+    };
 
-    const refresh = () => stRef.current?.refresh();
+    const ctx = gsap.context(mountScroll, ref);
+
+    const refresh = () => {
+      mountScroll();
+      checkOverflow();
+    };
     window.addEventListener("load", refresh);
     window.addEventListener("resize", refresh);
     track.querySelectorAll("img").forEach((img) => {
       if (!img.complete) img.addEventListener("load", refresh, { once: true });
     });
-
-    requestAnimationFrame(() => stRef.current?.refresh());
+    requestAnimationFrame(refresh);
 
     return () => {
       window.removeEventListener("load", refresh);
       window.removeEventListener("resize", refresh);
+      st?.kill();
       stRef.current = null;
+      section.classList.remove("objects--scrollable");
       ctx.revert();
     };
-  }, [ready, isMobile]);
+  }, [ready, isMobile, checkOverflow]);
+
+  const showArrows = canScroll;
 
   return (
     <section id="products" ref={ref} className="objects section--alt">
@@ -208,30 +231,38 @@ export function ObjectsSection() {
         </Link>
       </header>
 
+      {showArrows && (
+        <>
+          <button
+            type="button"
+            className="objects-nav objects-nav--prev"
+            aria-label="Previous products"
+            onClick={() => nudge(-1)}
+            onMouseEnter={() => startHover(-1)}
+            onMouseLeave={stopHover}
+          >
+            <ArrowIcon dir="left" />
+          </button>
+
+          <button
+            type="button"
+            className="objects-nav objects-nav--next"
+            aria-label="Next products"
+            onClick={() => nudge(1)}
+            onMouseEnter={() => startHover(1)}
+            onMouseLeave={stopHover}
+          >
+            <ArrowIcon dir="right" />
+          </button>
+        </>
+      )}
+
       <div ref={scrollWrapRef} className="objects-scroll-wrap">
-        <button
-          type="button"
-          className="objects-nav objects-nav--prev"
-          aria-label="Previous products"
-          onClick={() => nudge(-1)}
-          onMouseEnter={() => startHover(-1)}
-          onMouseLeave={stopHover}
+        <div
+          ref={trackRef}
+          className="objects-track"
+          style={{ "--object-cols": COLS_PER_VIEW } as CSSProperties}
         >
-          <ArrowIcon dir="left" />
-        </button>
-
-        <button
-          type="button"
-          className="objects-nav objects-nav--next"
-          aria-label="Next products"
-          onClick={() => nudge(1)}
-          onMouseEnter={() => startHover(1)}
-          onMouseLeave={stopHover}
-        >
-          <ArrowIcon dir="right" />
-        </button>
-
-        <div ref={trackRef} className="objects-track">
           {PRODUCTS.map((product, i) => (
             <Link
               key={product.id}
